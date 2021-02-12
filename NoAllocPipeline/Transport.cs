@@ -35,7 +35,7 @@ namespace Azure.Core.Http.NoAlloc
 
             HttpMethod method = MapMethod(pipelineRequest.Method);
 
-            Connection connection = await connectionFactory.ConnectAsync(new DnsEndPoint(host, 443));
+            Connection connection = await connectionFactory.ConnectAsync(new DnsEndPoint(host, 80));
             HttpConnection httpConnection = new Http1Connection(connection, HttpPrimitiveVersion.Version11);
             await using (ValueHttpRequest request = (await httpConnection.CreateNewRequestAsync(HttpPrimitiveVersion.Version11, HttpVersionPolicy.RequestVersionExact)).Value) {
 
@@ -52,9 +52,7 @@ namespace Azure.Core.Http.NoAlloc
 
                 var pipelineHeaders = pipelineRequest.Headers;
                 foreach (var header in pipelineHeaders) {
-                    if (header.Value == null) { // TODO: the request ID might be null (if SDK user does not set it). I don't know what to do with this.
-                        throw new NotImplementedException("HttpPipeline.CreateClientRequestIdScope has to be called in app code");
-                    }
+                    request.WriteHeader(header.Name, header.Value);
                 }
 
                 checked {
@@ -125,10 +123,7 @@ namespace Azure.Core.Http.NoAlloc
 
         public override Stream ContentStream { get; set; }
 
-        public override string ClientRequestId { 
-            get => _requestId ??= Guid.NewGuid().ToString();
-            set => _requestId = value;
-        }
+        public override string ClientRequestId { get; set; }
 
         public override void Dispose() {
             _headers.Clear();
@@ -165,7 +160,12 @@ namespace Azure.Core.Http.NoAlloc
     class NoAllocRequest : Request
     {
         Dictionary<string, HttpHeader> _headers = new Dictionary<string, HttpHeader>();
-        public override string ClientRequestId { get; set; }
+        string _requestId;
+
+        public override string ClientRequestId {
+            get => _requestId ??= Guid.NewGuid().ToString();
+            set => _requestId = value;
+        }
 
         public override void Dispose() {
         }

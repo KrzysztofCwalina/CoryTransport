@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Core" Version="1.9.0" />
+    <PackageReference Include="NetworkToolkit" Version="1.0.0-alpha2" />
+  </ItemGroup>
+
+</Project>
